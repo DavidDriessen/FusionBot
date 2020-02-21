@@ -2,12 +2,13 @@ const moment = require('moment');
 const express = require('express');
 const ColorHash = require('../bin/color-hash');
 const {Team, Member, Event} = require('../models');
+const { Op } = require("sequelize");
 
 const router = express.Router();
 
 router.get('/member', async function (req, res) {
     res.json(req.session.user);
-    return ;
+    return;
     const colorHash = new ColorHash();
     const member = await Member.findOne({where: {discordUser: req.session.user.id}});
     res.json((await member.getEvents({include: ['team']})).map(event => {
@@ -22,12 +23,23 @@ router.get('/member', async function (req, res) {
 });
 
 router.get('/team/:team?', async function (req, res) {
-    let team = req.params.team ? await Team.findOne({where: {id: req.params.team}}) : (await Member.findOne({
-        where: {id: req.session.user.id},
-        include: 'team'
-    })).team;
+    let team;
+    if (req.query.team) {
+        team = await Team.findByName(req.query.team);
+        if (team === []) return res.status(404).json({msg: "No team with name: " + req.query.team});
+        else team = team[0];
+    } else {
+        team = req.params.team ? await Team.findOne({where: {id: req.params.team}}) : (await Member.findOne({
+            where: {id: req.session.user.id},
+            include: 'team'
+        })).team;
+    }
     const colorHash = new ColorHash();
-    const events = await team.getEvents();
+    let events;
+    if (req.query.from)
+        events = await team.getEvents({where: {start: {[Op.gte]: req.query.from}, end: {[Op.lte]: req.query.to}}});
+    else
+        events = await team.getEvents();
     res.json(events.map(event => {
         return {
             id: event.id,

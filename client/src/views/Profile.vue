@@ -12,7 +12,10 @@
 <script>
 export default {
   name: "profile",
-  components: {}
+  components: {},
+  beforeMount() {
+    this.$store.dispatch("fetchData");
+  }
 };
 </script>
 

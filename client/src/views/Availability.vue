@@ -97,6 +97,9 @@ export default {
           event.remove();
         });
     }
+  },
+  beforeMount() {
+    this.$store.dispatch("fetchData");
   }
 };
 </script>

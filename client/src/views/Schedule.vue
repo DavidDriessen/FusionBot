@@ -263,6 +263,9 @@ export default {
           this.eventEdit.remove();
         });
     }
+  },
+  beforeMount() {
+    this.$store.dispatch("fetchData");
   }
 };
 </script>

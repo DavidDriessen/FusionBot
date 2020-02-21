@@ -40,8 +40,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/*', function (req, res, next) {
     if (req.xhr || req.headers.accept.indexOf('json') > -1)
         res.status(404).json({status: 'error', type: 'route', message: 'Page not found'});
-    else
+    else if (app.get('env') === 'production')
         res.sendFile(path.join(__dirname, 'public/index.html'));
+    else res.redirect("http://localhost:8080" + req.url);
 });
 
 module.exports = app;

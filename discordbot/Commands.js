@@ -8,9 +8,8 @@ const {broadcast} = require("./functions");
 const {downloadAttachment} = require("./functions");
 const {acceptProposal} = require("./functions");
 const {getDefaultChannel} = require("./functions");
-const {When2meet} = require("./When2meet");
-const {generateTimeTable} = require("../timetable/TableToImage");
 const {refresh, confirm} = require("./functions");
+const {pageToImage} = require("./PageToImage");
 const Op = require('sequelize').Op;
 
 const dateTimeFormats = ["H:mm", "h:mm a",
@@ -125,7 +124,7 @@ class Commands {
     static async run(client, message, cmd, args) {
         try {
             const c = new Commands(client, message);
-            if(c[cmd]) {
+            if (c[cmd]) {
                 const params = fnArgs(c[cmd]).map(r => r.split('__')[1].split('_'));
                 if (args.length < params.filter(r => r.slice(-1)[0] !== '').length) throw new CommandError('Not enough arguments.');
                 for (let i = 0; i < params.length; i++) {
@@ -231,12 +230,6 @@ class Commands {
         team.save();
     }
 
-    async setwhen2meet(when2meet__string) {
-        const team = await Team.getTeam(this.message.guild.id);
-        team.when2meet = when2meet__string;
-        team.save();
-    }
-
     async addteammember(user__mention, name__string_) {
         this.checkPermission(["Admin", "Team Captain"]);
         const team = await Team.getTeam(this.message.guild.id);
@@ -299,42 +292,15 @@ class Commands {
         let team = await team__team_float_;
         if (!(team instanceof Team)) team = await Team.getTeam(this.message.guild.id);
         await refresh(this.client, this.message.channel, async () => {
-            try {
-                let availability = [];
-                if (team.when2meet)
-                    availability = await When2meet((await team.getMembers()).map(i => i.name), team.when2meet);
-                const events = await team.getEvents({
-                    where: {
-                        start: {[Op.gt]: moment().startOf('week')},
-                        end: {[Op.lt]: moment().endOf('week')}
-                    }
-                });
-                const proposals = await team.getProposals({
-                    where: {
-                        start: {[Op.gt]: moment().startOf('week')},
-                        end: {[Op.lt]: moment().endOf('week')},
-                        accept: 1
-                    }, include: 'to_team'
-                }).map(p => {
-                    return {name: p.name + " - " + p.to_team.name, start: p.start, end: p.end};
-                });
-                const proposed = await team.getProposed({
-                    where: {
-                        start: {[Op.gt]: moment().startOf('week')},
-                        end: {[Op.lt]: moment().endOf('week')},
-                        accept: 1
-                    }, include: 'team'
-                }).map(p => {
-                    return {name: p.name + " - " + p.team.name, start: p.start, end: p.end};
-                });
-                return generateTimeTable(events.concat(proposals).concat(proposed), availability, team, 15).then((fileUrl) => {
+            return pageToImage("http://localhost:8080/timetable?team=" + team.name,
+                __dirname + "/../tmp/" + team.name + ".jpg")
+                .then((fileUrl) => {
                     const attachment = new Discord.Attachment(fileUrl);
                     return new Discord.RichEmbed().attachFile(attachment);
+                }).catch((e) => {
+                    console.error(e);
+                    return "Something went wrong:\n" + e.message();
                 });
-            } catch (e) {
-                console.error(e);
-                return "Something went wrong:\n" + e.message();
-            }
         });
     }
 
@@ -346,8 +312,7 @@ class Commands {
     }
 
     clear() {
-        return;
-        this.message.channel.fetchMessages().then(msgs => msgs.forEach(msg => msg.delete().catch(e => console.error(e))));
+        // this.message.channel.fetchMessages().then(msgs => msgs.forEach(msg => msg.delete().catch(e => console.error(e))));
     }
 
     help() {
@@ -355,8 +320,7 @@ class Commands {
             "**" + config.prefix + "setteamname <name>**:\n Change the name of the team. Default is Discord server name.\n" +
             "**" + config.prefix + "team**:\n List members in the team.\n" +
             "**" + config.prefix + "teams**:\n List all teams.\n" +
-            "**" + config.prefix + "setwhen2meet \"<id>\"**:\n Set the when2meet id. The id is after '?' in the url.\n" +
-            "**" + config.prefix + "addteammember <@discord_user> <when2meet_name>**:\n Add user to the main team. <when2meet_name> defaults to <@discord_user> username.\n" +
+            "**" + config.prefix + "addteammember <@discord_user> <name>**:\n Add user to the main team. <name> defaults to <@discord_user> username.\n" +
             "**" + config.prefix + "removeteammember <@discord_user>**:\n Remove from the main team.\n" +
             "**" + config.prefix + "events**:\n List events on the schedule.\n" +
             "**" + config.prefix + "removeevent <event_id>**:\n Remove a event from the schedule.\n" +
@@ -364,7 +328,7 @@ class Commands {
             "**" + config.prefix + "proposeevent \"<team_name>\" \"<name>\" \"<start>\" \"<end>\"**:\n Propose an event to a team.\n" +
             " - <start> and <end> are datetime type '" + config.prefix + "formats' to get acceptable time dateTimeFormats.\n" +
             " - <end> can also be the length of the event. For example '1.5' is 1 hour and 30 minutes.\n" +
-            "**" + config.prefix + "schedule <team>**:\n Show the schedule of a team with availability from when2meet. <team> defaults to your team.\n")
+            "**" + config.prefix + "schedule <team>**:\n Show the schedule of a team with availability from the website FusionBot.my-server.nl. <team> defaults to your team.\n")
         ).then(m => m.delete(5 * 6000));
     }
 

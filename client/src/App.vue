@@ -5,7 +5,7 @@
         <img :src="TeamIcon" class="logo" :alt="TeamName" />
         {{ TeamName }}
       </h1>
-      <div style="float: right">
+      <div style="position: absolute; right: 100px; top: 80px">
         {{ timezone }}
       </div>
     </header>
@@ -25,12 +25,10 @@ export default {
   components: {
     Nav
   },
-  beforeMount() {
-    this.$store.dispatch("fetchData");
-  },
   computed: {
     ...mapGetters(["isInTeam", "TeamIcon", "TeamName"]),
     timezone() {
+      if (this.$route.name === "timetable") return "UTC";
       return moment.tz.guess();
     }
   }
@@ -51,7 +49,7 @@ export default {
 }
 
 header {
-  margin-bottom: 20px;
+  margin: 20px;
   border: 3px solid #ffffff;
   color: #fbffff;
   padding: 10px;

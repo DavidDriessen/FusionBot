@@ -8,7 +8,10 @@
 <script>
 export default {
   name: "home",
-  components: {}
+  components: {},
+  beforeMount() {
+    this.$store.dispatch("fetchData");
+  }
 };
 </script>
 

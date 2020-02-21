@@ -29,6 +29,15 @@ export default new Vuex.Store({
         context.commit("SET_USER", response.data);
         context.commit("SET_LOADING", false);
       });
+    },
+    fetchTeam(context, payload) {
+      context.commit("SET_LOADING", true);
+      axios
+        .get("/api/user/" + payload.team, { params: { noLogin: true } })
+        .then(response => {
+          context.commit("SET_USER", response.data);
+          context.commit("SET_LOADING", false);
+        });
     }
   },
   getters: {
