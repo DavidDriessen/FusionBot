@@ -1,8 +1,8 @@
 <template>
-  <div id="app">
+  <div id="app" :class="$route.path !== '/timetable' ? '' : 'collapse'">
     <header>
       <h1 v-if="isInTeam">
-        <img :src="TeamIcon" class="logo" />
+        <img :src="TeamIcon" class="logo" :alt="TeamName" />
         {{ TeamName }}
       </h1>
       <div style="float: right">
@@ -10,7 +10,9 @@
       </div>
     </header>
     <Nav v-if="$route.path !== '/timetable'" />
-    <router-view class="router-view jumbotron" />
+    <b-container>
+      <router-view />
+    </b-container>
   </div>
 </template>
 
@@ -36,14 +38,40 @@ export default {
 </script>
 
 <style lang="scss">
+@import "~bootswatch/dist/cyborg/variables";
+@import "~bootstrap";
+@import "~bootstrap-vue";
+@import "~bootswatch/dist/cyborg/bootswatch";
+
+#app {
+  display: grid;
+  grid-template-columns: auto 9fr;
+  grid-template-rows: 200px auto;
+  grid-template-areas: "head head" "side content";
+}
+
 header {
-  left: 20px;
-  right: 20px;
   margin-bottom: 20px;
   border: 3px solid #ffffff;
   color: #fbffff;
   padding: 10px;
   text-align: center;
+  grid-area: head;
+}
+
+nav {
+  grid-area: side;
+  width: 200px;
+  transition: all 0.3s;
+  margin: 20px;
+}
+
+.collapse nav {
+  margin-left: -240px;
+}
+
+.container {
+  grid-area: content;
 }
 
 .logo {
@@ -51,12 +79,5 @@ header {
   margin-top: -20px;
   margin-right: 20px;
   height: 100px;
-}
-
-.router-view {
-  margin-top: 40px;
-  margin-right: 40px;
-  margin-left: 200px;
-  padding: 30px;
 }
 </style>

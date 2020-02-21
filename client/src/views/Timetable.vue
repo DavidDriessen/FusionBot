@@ -79,10 +79,7 @@ export default {
           }
         }
       ],
-      calendarPlugins: [
-        timeGridPlugin,
-        momentPlugin
-      ],
+      calendarPlugins: [timeGridPlugin, momentPlugin],
       eventRender: info => {
         if (info.event.source && info.event.source.id === "events") {
           info.el.style.setProperty("margin", "0 4px");
@@ -93,10 +90,8 @@ export default {
   components: {
     FullCalendar
   },
-  computed: {
-  },
-  methods: {
-  }
+  computed: {},
+  methods: {}
 };
 </script>
 

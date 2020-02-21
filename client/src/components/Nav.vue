@@ -1,52 +1,27 @@
 <template>
-  <div id="nav">
-    <div class="card border-danger mb-3" style="max-width: 20rem;">
-      <img :src="$store.state.user.avatar" />
-      <div class="card-header">{{ $store.state.user.name }}</div>
-    </div>
+  <nav>
+    <b-card class="border-danger mb-3">
+      <b-card-header>
+        <img :src="$store.state.user.avatar" />
+        <h5>{{ $store.state.user.name }}</h5>
+      </b-card-header>
+    </b-card>
     <br />
-    <ul class="list-group">
-      <router-link
-        to="/"
-        tag="li"
-        class="list-group-item d-flex justify-content-between align-items-center"
-        exact-active-class="active"
-      >
-        Home
-      </router-link>
-      <router-link
-        to="/availability"
-        tag="li"
-        class="list-group-item d-flex justify-content-between align-items-center"
-        exact-active-class="active"
-      >
-        Availability
-      </router-link>
-      <router-link
-        to="/schedule"
-        tag="li"
-        class="list-group-item d-flex justify-content-between align-items-center"
-        exact-active-class="active"
-      >
-        Schedule
-      </router-link>
-    </ul>
-  </div>
+    <b-card>
+      <b-nav vertical pills>
+        <b-nav-item to="/" exact exact-active-class="active">
+          Home
+        </b-nav-item>
+        <b-nav-item to="/availability" exact exact-active-class="active">
+          Availability
+        </b-nav-item>
+        <b-nav-item to="/schedule" exact exact-active-class="active">
+          Schedule
+        </b-nav-item>
+      </b-nav>
+    </b-card>
+  </nav>
 </template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-#nav {
-  left: 20px;
-  padding: 30px;
-  width: 200px;
-  float: left;
-  cursor: pointer;
-
-  li {
-    font-weight: bold;
-    font-size: 20px;
-    color: #dcf1ff;
-  }
-}
-</style>
+<style scoped lang="scss"></style>
