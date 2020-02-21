@@ -17,9 +17,6 @@ module.exports = {
       icon: {
         type: Sequelize.STRING
       },
-      when2meet: {
-        type: Sequelize.STRING
-      },
       channel: {
         type: Sequelize.STRING
       },

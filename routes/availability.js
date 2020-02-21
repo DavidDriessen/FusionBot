@@ -1,25 +1,32 @@
-const {Member, Availability} = require('../models');
+const {Team, Member, Availability} = require('../models');
 const moment = require('moment');
 const express = require('express');
 
 const router = express.Router();
 
-router.get('/team/re', function (req, res) {
-    Member.findOne({where: {id: req.session.user.id}, include: 'team'}).then(member => {
-        member.team.getAvailability().then(a => {
-            res.json(a.map(m => {
-                return {
-                    groupId: m.id,
-                    startTime: m.start.utcOffset(req.query.timeZoneOffset).format("HH:mm"),
-                    endTime: Math.floor(m.start.hours() +
-                        (m.end.utcOffset(req.query.timeZoneOffset)
-                            .diff(m.start.utcOffset(req.query.timeZoneOffset)) / 1000 / 60 / 60))
-                        + ":" + m.end.utcOffset(req.query.timeZoneOffset).minutes(),
-                    daysOfWeek: [moment(m.start + moment().startOf('week')).isoWeekday()]
-                }
-            }));
-        });
-    });
+router.get('/team/re', async function (req, res) {
+    let team;
+    if (req.query.team) {
+        team = await Team.findByName(req.query.team);
+        if (team === []) return res.status(404).json({msg: "No team with name: " + req.query.team});
+        else team = team[0];
+    } else {
+        const member = await Member.findOne({where: {id: req.session.user.id}, include: 'team'});
+        team = member.team;
+    }
+    const a = await team.getAvailability();
+    res.json(a.map(m => {
+        return {
+            groupId: m.id,
+            startTime: ((req.query.timeZoneOffset) ? m.start.utcOffset(req.query.timeZoneOffset) : m.start).format("HH:mm"),
+            endTime: Math.floor(m.start.hours() +
+                (((req.query.timeZoneOffset) ? m.end.utcOffset(req.query.timeZoneOffset) : m.end)
+                    .diff(((req.query.timeZoneOffset) ? m.start.utcOffset(req.query.timeZoneOffset) : m.start)) / 1000 / 60 / 60))
+                + ":" + moment(((req.query.timeZoneOffset) ? m.end.utcOffset(req.query.timeZoneOffset) : m.end)
+                    .minutes(), "m").format("mm"),
+            daysOfWeek: [moment(m.start + moment().startOf('week')).isoWeekday()]
+        }
+    }));
 });
 router.get('/member/re', function (req, res) {
     Member.findOne({where: {id: req.session.user.id}, include: 'team'}).then(member => {

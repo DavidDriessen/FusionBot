@@ -1,5 +1,5 @@
 const express = require('express');
-const {Member} = require('../models');
+const {Team, Member} = require('../models');
 
 const router = express.Router();
 
@@ -15,5 +15,13 @@ router.get('/', async function (req, res) {
             include: 'team'
         }));
 });
+router.get('/:team', async function (req, res) {
+    res.json({
+        subber: null,
+        name: "",
+        avatar: "",
+        team: (await Team.findByName(req.params.team))[0]});
+});
+
 
 module.exports = router;

@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
         guild: DataTypes.STRING,
         name: DataTypes.STRING,
         icon: DataTypes.STRING,
-        when2meet: DataTypes.STRING,
         channel: DataTypes.STRING,
         message: DataTypes.STRING
     }, {});
@@ -39,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
                 }
                 memAvail.push(temp);
             }
-            let cross = timeOverlap.cross(...memAvail);
+            let cross = (memAvail.length === 0) ? [] :(memAvail.length === 1) ? memAvail[0] : timeOverlap.cross(...memAvail);
             if (cross.length % 2) console.error("Cross error");
             let avail = [];
             for (let i = 0; i < cross.length; i += 2) {
