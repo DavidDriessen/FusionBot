@@ -1,6 +1,8 @@
 'use strict';
 const Op = require('sequelize').Op;
-const timeOverlap = require('time-overlap');
+const Moment = require('moment');
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(Moment);
 
 module.exports = (sequelize, DataTypes) => {
     const Team = sequelize.define('Team', {
@@ -27,25 +29,27 @@ module.exports = (sequelize, DataTypes) => {
         return this.findOne({where: {guild: guild}});
     };
 
-    Team.prototype.getAvailability = function () {
-        return this.getMembers({include: 'available'}).then(members => {
-            let memAvail = [];
-            for (const member of members) {
-                let temp = [];
-                for (const avail of member.available) {
-                    temp.push(avail.start);
-                    temp.push(avail.end);
+    function overlap(a) {
+        function f(c, a) {
+            if (a.length === 0) return c;
+            const tempA = a.shift();
+            const temp = [];
+            for (let a1 = 0; a1 < c.length; a1++) {
+                for (let a2 = 0; a2 < tempA.length; a2++) {
+                    temp.push(c[a1].intersect(tempA[a2]));
                 }
-                memAvail.push(temp);
             }
-            let cross = (memAvail.length === 0) ? [] :(memAvail.length === 1) ? memAvail[0] : timeOverlap.cross(...memAvail);
-            if (cross.length % 2) console.error("Cross error");
-            let avail = [];
-            for (let i = 0; i < cross.length; i += 2) {
-                if (i === cross.length) break;
-                avail.push({start: cross[i], end: cross[i + 1]});
-            }
-            return avail;
+            return f(temp.filter(a => a), a);
+        }
+
+        if (a.length === 0) return [];
+        return f(a.shift(), a);
+    }
+
+    Team.prototype.getAvailability = function (cross = true, excludedMembers = []) {
+        return this.getMembers({where: {id: {[Op.notIn]: excludedMembers}}, include: 'available'}).then(members => {
+            if (!cross) return [].concat.apply([], members.map(m => m.available));
+            return overlap(members.map(member => member.available.map(a => moment().range(a.start, a.end))));
         });
     };
     return Team;

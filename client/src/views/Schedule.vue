@@ -1,6 +1,16 @@
 <template>
   <div class="schedule">
     <h4>Schedule</h4>
+    <div class="filters">
+      <b-checkbox v-model="conf.cross">Cross</b-checkbox>
+      <b-checkbox
+        v-for="mem in $store.getters.TeamMembers"
+        :key="mem.id"
+        @input="exclude(mem.id, $event)"
+        :checked="true"
+        >{{ mem.name }}
+      </b-checkbox>
+    </div>
     <FullCalendar
       ref="cal"
       :header="{
@@ -27,78 +37,50 @@
       @eventResize="editSlot"
       @eventClick="eventClick"
     />
-    <div class="modal" v-show="isOpen" style="display: block">
-      <div class="modal-dialog" role="document" style="height: 100%;">
-        <div class="modal-content" style="max-height: 80%">
-          <div class="modal-header">
-            <h5 class="modal-title">Event</h5>
-            <button
-              type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              @click="close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <fieldset>
-              <div class="form-group">
-                <label for="title">Title</label>
-                <input
-                  id="title"
-                  type="text"
-                  class="form-control"
-                  placeholder="Title"
-                  v-model="eventEditTitle"
-                />
-              </div>
-              <div class="form-group">
-                <label for="start">Start</label>
-                <input
-                  id="start"
-                  type="datetime-local"
-                  class="form-control"
-                  v-model="eventEditStart"
-                />
-              </div>
-              <div class="form-group">
-                <label for="end">End</label>
-                <input
-                  id="end"
-                  type="datetime-local"
-                  class="form-control"
-                  v-model="eventEditEnd"
-                />
-              </div>
-            </fieldset>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-danger"
-              v-if="eventEdit.id"
-              @click="removeSlot"
-              style="float: left"
-            >
-              Delete
-            </button>
-            <button type="button" class="btn btn-primary" @click="save">
-              Save changes
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-              @click="close"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <b-modal id="event" title="Event" @ok="save" @hide="hide">
+      <b-form>
+        <b-form-group
+          label="Title"
+          label-for="title"
+          description="Name of event."
+        >
+          <b-form-input
+            v-model="eventEditTitle"
+            id="title"
+            required
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="Start" label-for="start">
+          <b-form-input
+            v-model="eventEditStart"
+            type="datetime-local"
+            id="start"
+            required
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="End" label-for="end">
+          <b-form-input
+            v-model="eventEditEnd"
+            type="datetime-local"
+            id="end"
+            required
+          ></b-form-input>
+        </b-form-group>
+      </b-form>
+
+      <template v-slot:modal-footer="{ ok, cancel, hide }">
+        <b-button
+          size="md"
+          variant="danger"
+          @click="hide('delete')"
+          style="position: absolute;left: 20px;"
+        >
+          Delete
+        </b-button>
+        <b-button size="md" variant="" @click="cancel()">Cancel</b-button>
+        <b-button size="md" variant="success" @click="ok()">Save</b-button>
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -116,7 +98,10 @@ export default {
   data() {
     const self = this;
     return {
-      isOpen: false,
+      conf: {
+        cross: true,
+        exclude: []
+      },
       eventEdit: {},
       eventSources: [
         {
@@ -129,7 +114,9 @@ export default {
                   "/re",
                 {
                   params: {
-                    timeZoneOffset: moment(fetchInfo.start).format("Z")
+                    timeZoneOffset: moment(fetchInfo.start).format("Z"),
+                    cross: self.conf.cross,
+                    exclude: self.conf.exclude
                   }
                 }
               )
@@ -217,15 +204,10 @@ export default {
     }
   },
   methods: {
-    close() {
-      this.isOpen = false;
-      this.$refs.cal.getApi().unselect();
-      if (!this.eventEdit.id) this.eventEdit.remove();
-    },
     open(event) {
       if (event.id) this.eventEdit = event;
       else this.eventEdit = this.$refs.cal.getApi().addEvent(event);
-      this.isOpen = true;
+      this.$bvModal.show("event");
     },
     save() {
       if (!this.eventEdit.title) {
@@ -233,7 +215,6 @@ export default {
       } else {
         if (this.eventEdit.id) this.editSlot({ event: this.eventEdit });
         else this.addSlot({ event: this.eventEdit });
-        this.close();
       }
     },
     addSlot(info) {
@@ -243,7 +224,8 @@ export default {
         end: info.event.end
       };
       axios.put("/api/events/team", event).then(response => {
-        this.$refs.cal.getApi().addEvent(response.data);
+        this.$refs.cal.getApi().refetchEvents();
+        // this.$refs.cal.getApi().addEvent(response.data);
       });
     },
     editSlot(info) {
@@ -259,9 +241,27 @@ export default {
       axios
         .delete("/api/events/team", { params: { id: this.eventEdit.id } })
         .then(response => {
-          this.close();
           this.eventEdit.remove();
         });
+    },
+    hide(e) {
+      if (e.trigger === "delete") this.removeSlot();
+      this.$refs.cal.getApi().unselect();
+      if (!this.eventEdit.id) this.eventEdit.remove();
+    },
+    exclude(id, value) {
+      if (!value) {
+        this.conf.exclude.push(id);
+      } else {
+        if (this.conf.exclude.indexOf(id) >= 0)
+          this.conf.exclude.splice(this.conf.exclude.indexOf(id), 1);
+      }
+      this.$refs.cal.getApi().refetchEvents();
+    }
+  },
+  watch: {
+    "conf.cross": function(e) {
+      this.$refs.cal.getApi().refetchEvents();
     }
   },
   beforeMount() {

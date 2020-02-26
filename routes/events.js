@@ -2,15 +2,13 @@ const moment = require('moment');
 const express = require('express');
 const ColorHash = require('../bin/color-hash');
 const {Team, Member, Event} = require('../models');
-const { Op } = require("sequelize");
+const {Op} = require("sequelize");
 
 const router = express.Router();
+const colorHash = new ColorHash();
 
 router.get('/member', async function (req, res) {
-    res.json(req.session.user);
-    return;
-    const colorHash = new ColorHash();
-    const member = await Member.findOne({where: {discordUser: req.session.user.id}});
+    const member = await Member.findOne({where: {id: req.session.user.id}});
     res.json((await member.getEvents({include: ['team']})).map(event => {
         return {
             id: event.id,
@@ -34,7 +32,6 @@ router.get('/team/:team?', async function (req, res) {
             include: 'team'
         })).team;
     }
-    const colorHash = new ColorHash();
     let events;
     if (req.query.from)
         events = await team.getEvents({where: {start: {[Op.gte]: req.query.from}, end: {[Op.lte]: req.query.to}}});
@@ -51,31 +48,33 @@ router.get('/team/:team?', async function (req, res) {
     }));
 });
 router.post('/team', function (req, res) {
-    Event.findOne({where: {id: req.body.id}}).then(a => {
-        a.name = req.body.title;
-        a.start = moment(req.body.start);
-        a.end = moment(req.body.end);
-        a.save();
+    Event.findOne({where: {id: req.body.id}}).then(event => {
+        event.name = req.body.title;
+        event.start = moment(req.body.start);
+        event.end = moment(req.body.end);
+        event.save();
         res.send({
-            id: a.id,
-            title: a.name,
-            start: a.start.toISOString(),
-            end: a.end.toISOString()
+            id: event.id,
+            title: event.name,
+            start: event.start.toISOString(),
+            end: event.end.toISOString(),
+            color: colorHash.hex(event.name)
         });
     });
 });
 router.put('/team', function (req, res) {
-    Member.findOne({where: {discordUser: req.session.user.id}, include: 'team'}).then(member => {
+    Member.findOne({where: {id: req.session.user.id}, include: 'team'}).then(member => {
         member.team.createEvent({
             name: req.body.title,
             start: moment(req.body.start),
             end: moment(req.body.end)
-        }).then(a => {
+        }).then(event => {
             res.send({
-                id: a.id,
-                title: a.name,
-                start: a.start.toISOString(),
-                end: a.end.toISOString()
+                id: event.id,
+                title: event.name,
+                start: event.start.toISOString(),
+                end: event.end.toISOString(),
+                color: colorHash.hex(event.name)
             });
         });
     });

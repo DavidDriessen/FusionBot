@@ -2,7 +2,8 @@
 module.exports = (sequelize, DataTypes) => {
     const Member = sequelize.define('Member', {
         discordUser: DataTypes.STRING,
-        name: DataTypes.STRING
+        name: DataTypes.STRING,
+        avatar: DataTypes.STRING
     }, {});
     Member.associate = function (models) {
         Member.belongsTo(models.Team, {as: "team"});

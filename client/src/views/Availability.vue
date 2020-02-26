@@ -8,6 +8,7 @@
         center: '',
         right: ''
       }"
+      :now-indicator="true"
       :firstDay="1"
       :editable="true"
       :selectable="true"

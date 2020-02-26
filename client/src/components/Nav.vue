@@ -1,13 +1,10 @@
 <template>
   <nav>
-    <b-card class="border-danger mb-3">
-      <b-card-header>
-        <img :src="$store.state.user.avatar" />
-        <h5>{{ $store.state.user.name }}</h5>
-      </b-card-header>
+    <b-card class="border-danger mb-3 user">
+      <img class="avatar" :src="$store.state.user.avatar" />
+      {{ $store.state.user.name }}
     </b-card>
-    <br />
-    <b-card>
+    <b-card class="menu">
       <b-nav vertical pills>
         <b-nav-item to="/" exact exact-active-class="active">
           Home
@@ -24,4 +21,22 @@
 </template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.card {
+  position: fixed;
+  width: 200px;
+}
+.menu {
+  margin-top: 150px;
+}
+.avatar {
+  border-radius: 50%;
+  height: 50px;
+  float: left;
+  margin-right: 10px;
+}
+.user {
+  font-size: 15px;
+  line-height: 50px;
+}
+</style>

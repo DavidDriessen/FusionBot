@@ -1,18 +1,30 @@
 <template>
-  <div id="app" :class="$route.path !== '/timetable' ? '' : 'collapse'">
-    <header>
+  <div
+    id="app"
+    :class="$route.path === '/timetable' || collapseMenu ? 'collapse' : ''"
+  >
+    <b-jumbotron>
+      <b-button
+        v-if="$route.path !== '/timetable'"
+        class="menu-btn"
+        @click="collapseMenu = !collapseMenu"
+        >Menu</b-button
+      >
       <h1 v-if="isInTeam">
         <img :src="TeamIcon" class="logo" :alt="TeamName" />
         {{ TeamName }}
       </h1>
-      <div style="position: absolute; right: 100px; top: 80px">
+      <div class="timezone">
         {{ timezone }}
       </div>
-    </header>
-    <Nav v-if="$route.path !== '/timetable'" />
-    <b-container>
-      <router-view />
+    </b-jumbotron>
+    <Nav />
+    <b-container fluid="">
+      <b-card>
+        <router-view />
+      </b-card>
     </b-container>
+    <footer></footer>
   </div>
 </template>
 
@@ -22,6 +34,11 @@ import { mapGetters } from "vuex";
 import moment from "moment-timezone";
 
 export default {
+  data() {
+    return {
+      collapseMenu: false
+    };
+  },
   components: {
     Nav
   },
@@ -44,15 +61,18 @@ export default {
 #app {
   display: grid;
   grid-template-columns: auto 9fr;
-  grid-template-rows: 200px auto;
-  grid-template-areas: "head head" "side content";
+  grid-template-rows: 200px auto 100px;
+  grid-template-areas:
+    "head head"
+    "side cont"
+    "foot foot";
 }
 
-header {
+.jumbotron {
   margin: 20px;
   border: 3px solid #ffffff;
   color: #fbffff;
-  padding: 10px;
+  padding: 40px;
   text-align: center;
   grid-area: head;
 }
@@ -68,8 +88,14 @@ nav {
   margin-left: -240px;
 }
 
-.container {
-  grid-area: content;
+.container-fluid {
+  grid-area: cont;
+  padding-top: 20px;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+footer {
+  grid-area: foot;
 }
 
 .logo {
@@ -77,5 +103,23 @@ nav {
   margin-top: -20px;
   margin-right: 20px;
   height: 100px;
+}
+
+.fc-today {
+  background: #000000 !important;
+  border: none !important;
+  border-top: 1px solid #ddd !important;
+  font-weight: bold;
+}
+
+.timezone {
+  position: absolute;
+  right: 100px;
+  top: 80px;
+}
+.menu-btn {
+  position: absolute;
+  left: 100px;
+  top: 80px;
 }
 </style>

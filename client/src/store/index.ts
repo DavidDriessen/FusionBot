@@ -8,7 +8,7 @@ export default new Vuex.Store({
   state: {
     loading: false,
     user: {
-      team: { name: null, icon: null },
+      team: { name: null, icon: null, members: [] },
       subber: null,
       name: "",
       avatar: ""
@@ -54,6 +54,10 @@ export default new Vuex.Store({
     TeamName(state, getters) {
       if (!getters.isInTeam) return "";
       return state.user.team.name;
+    },
+    TeamMembers(state, getters) {
+      if (!getters.isInTeam) return [];
+      return state.user.team.members;
     }
   },
   modules: {}

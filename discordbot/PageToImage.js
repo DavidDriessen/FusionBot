@@ -39,5 +39,3 @@ function pageToImage(url, file = _file) {
 }
 
 module.exports = {pageToImage};
-
-// pageToImage("http://localhost:8080/timetable?team=Fusion");

@@ -31,7 +31,6 @@ import moment from "moment";
 
 let min = moment("23:59", "HH:mm");
 let max = moment("01:00", "HH:mm");
-let mutexMax = false;
 
 function calcRange(data) {
   min = Math.min(
@@ -66,7 +65,7 @@ function calcRange(data) {
       );
   return [
     moment(min)
-      .subtract(15, "minutes")
+      .subtract(30 - (moment(min).minutes() % 30), "minutes")
       .format("HH:mm"),
     Math.floor(
       (moment(max).add(15, "minutes") - moment("00:00", "HH:mm")) /
@@ -135,7 +134,7 @@ function calcRangeDate(data) {
       );
   return [
     moment(min)
-      .subtract(15, "minutes")
+      .subtract(30 - (moment(min).minutes() % 30), "minutes")
       .format("HH:mm"),
     Math.floor(
       (moment(max).add(15, "minutes") - moment("00:00", "HH:mm")) /
@@ -220,4 +219,7 @@ export default {
 <style lang="scss">
 @import "~@fullcalendar/core/main.css";
 @import "~@fullcalendar/timegrid/main.css";
+.fc-content {
+  font-size: 15px;
+}
 </style>

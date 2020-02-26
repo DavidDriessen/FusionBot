@@ -233,7 +233,12 @@ class Commands {
     async addteammember(user__mention, name__string_) {
         this.checkPermission(["Admin", "Team Captain"]);
         const team = await Team.getTeam(this.message.guild.id);
-        const member = await Member.findOne({where: {discordUser: user__mention.id}});
+        const member = (await Member.findOrCreate({
+            where: {discordUser: user__mention.id}, defaults: {
+                name: user__mention.username,
+                avatar: "https://cdn.discordapp.com/avatars/" + user__mention.id + "/" + user__mention.avatar + ".jpg"
+            }
+        }))[0];
         if (member) {
             member.setTeam(team);
         } else {
@@ -292,7 +297,7 @@ class Commands {
         let team = await team__team_float_;
         if (!(team instanceof Team)) team = await Team.getTeam(this.message.guild.id);
         await refresh(this.client, this.message.channel, async () => {
-            return pageToImage("http://localhost:8080/timetable?team=" + team.name,
+            return pageToImage(config.host + "/timetable?team=" + team.name,
                 __dirname + "/../tmp/" + team.name + ".jpg")
                 .then((fileUrl) => {
                     const attachment = new Discord.Attachment(fileUrl);

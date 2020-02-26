@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const logger = require('morgan');
+require('./migrate');
 require('./discordbot');
 
 const app = express();
@@ -42,7 +43,7 @@ app.use('/*', function (req, res, next) {
         res.status(404).json({status: 'error', type: 'route', message: 'Page not found'});
     else if (app.get('env') === 'production')
         res.sendFile(path.join(__dirname, 'public/index.html'));
-    else res.redirect("http://localhost:8080" + req.url);
+    else res.redirect(require("./config/config").host + req.url);
 });
 
 module.exports = app;

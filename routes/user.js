@@ -11,16 +11,17 @@ router.get('/logout', function (req, res) {
 
 router.get('/', async function (req, res) {
     res.json(await Member.findOne({
-            where: {id: req.session.user.id},
-            include: 'team'
-        }));
+        where: {id: req.session.user.id},
+        include: [{as: 'team', model: Team, include: 'members', required: false}]
+    }));
 });
 router.get('/:team', async function (req, res) {
     res.json({
         subber: null,
         name: "",
         avatar: "",
-        team: (await Team.findByName(req.params.team))[0]});
+        team: (await Team.findByName(req.params.team))[0]
+    });
 });
 
 

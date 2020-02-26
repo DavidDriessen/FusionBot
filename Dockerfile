@@ -61,18 +61,19 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 COPY bin ./bin
+COPY migrate.js ./migrate.js
 COPY app.js ./app.js
 COPY models ./models
 COPY routes ./routes
-COPY timetable ./timetable
 COPY migrations ./migrations
 COPY discordbot ./discordbot
 
+RUN mkdir ./tmp
 RUN mkdir ./public
 COPY --from=web-interface /app/client/dist ./public
 
 EXPOSE 3000
 ENV NODE_ENV production
 
-ENTRYPOINT ["node"]
-CMD ["bin/www"]
+ENTRYPOINT ["npm"]
+CMD ["run", "start"]

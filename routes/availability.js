@@ -14,17 +14,21 @@ router.get('/team/re', async function (req, res) {
         const member = await Member.findOne({where: {id: req.session.user.id}, include: 'team'});
         team = member.team;
     }
-    const a = await team.getAvailability();
+    const timeZoneOffset = req.query.timeZoneOffset ? req.query.timeZoneOffset : 0;
+    const a = await team.getAvailability(req.query.cross !== "false", req.query.exclude).map(i => {
+        return {
+            id: i.id,
+            start: moment(i.start + moment().startOf('week')).utcOffset(timeZoneOffset),
+            end: moment(i.end + moment().startOf('week')).utcOffset(timeZoneOffset)
+        }
+    });
     res.json(a.map(m => {
         return {
             groupId: m.id,
-            startTime: ((req.query.timeZoneOffset) ? m.start.utcOffset(req.query.timeZoneOffset) : m.start).format("HH:mm"),
-            endTime: Math.floor(m.start.hours() +
-                (((req.query.timeZoneOffset) ? m.end.utcOffset(req.query.timeZoneOffset) : m.end)
-                    .diff(((req.query.timeZoneOffset) ? m.start.utcOffset(req.query.timeZoneOffset) : m.start)) / 1000 / 60 / 60))
-                + ":" + moment(((req.query.timeZoneOffset) ? m.end.utcOffset(req.query.timeZoneOffset) : m.end)
-                    .minutes(), "m").format("mm"),
-            daysOfWeek: [moment(m.start + moment().startOf('week')).isoWeekday()]
+            startTime: m.start.format("HH:mm"),
+            endTime: m.end.hours() + (m.end.days() - m.start.days()) * 24
+                + ":" + moment(m.end.minutes(), "m").format("mm"),
+            daysOfWeek: [m.start.isoWeekday()]
         }
     }));
 });
