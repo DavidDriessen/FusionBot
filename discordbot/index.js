@@ -1,5 +1,6 @@
 const config = require("../config/config.json");
 const {Commands} = require('./Commands');
+// const CommandHandler = require("./CommandHandler");
 const {Team} = require('../models');
 const Discord = require('discord.js');
 const client = new Discord.Client();
@@ -7,6 +8,7 @@ const client = new Discord.Client();
 client.on('ready', () => {
     console.log("FusionBot is ready with version: " + require('../package.json').version);
     client.user.setActivity('Bot running version: ' + require('../package.json').version);
+    require("./workers")(client);
 });
 client.on('error', console.error);
 
@@ -39,6 +41,8 @@ client.on('message', message => {
     const cmd = args.shift().toLowerCase();
 
     Commands.run(client, message, cmd, args).catch(console.error);
+    // const c = new CommandHandler(client);
+    // c.executeCommand(message, cmd, args);
 });
 
 

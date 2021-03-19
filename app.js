@@ -39,6 +39,7 @@ app.use('/discord', require('./routes/discord'));
 app.use('/api', require('./routes'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/*', function (req, res, next) {
+    // noinspection JSUnresolvedVariable
     if (req.xhr || req.headers.accept.indexOf('json') > -1)
         res.status(404).json({status: 'error', type: 'route', message: 'Page not found'});
     else if (app.get('env') === 'production')

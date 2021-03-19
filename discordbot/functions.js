@@ -153,7 +153,7 @@ async function refresh(client, channel, func) {
     }
 
     let filter = (reaction, user) => (reactions.includes(reaction.emoji.name) || reactions.includes(reaction.emoji.id) || true);
-    const collector = m.createReactionCollector(filter, this.options);
+    const collector = m.createReactionCollector(filter);
 
     const onDelete = (deletedMessage) => {
         if (deletedMessage.id === m.id) {
@@ -175,7 +175,8 @@ async function refresh(client, channel, func) {
 
     collector.on('end', (collected, reason) => {
         m.client.removeListener('messageDelete', onDelete);
-        m.delete();
+        if (!m.deleted)
+            m.delete();
     });
 }
 
